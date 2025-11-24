@@ -52,14 +52,40 @@ async function run() {
 
     app.get("/all-crops", async (req, res) => {
       const email = req.query.email;
+      console.log(email);
+      
       let query = {};
       if(email){
 
         query={'owner.ownerEmail':email};
       }
+      console.log(query);
+      
       const result = await corpsCollection.find(query).toArray();
       res.send(result);
+      console.log(result);
+      
     });
+    app.patch('/crops/:id',async(req,res)=>{
+      const id = req.params.id;
+      const updatedCrop = req.body;
+      const filter = {_id:new ObjectId(id)};
+      const update = {
+        $set:{
+          name:updatedCrop.name,
+           type:updatedCrop.type,
+           pricePerUnit:updatedCrop.pricePerUnit,
+           unit:updatedCrop.unit,
+           quantity:updatedCrop.quantity,
+           description:updatedCrop.description,
+           location:updatedCrop.location,
+           image:updatedCrop.image
+
+        }
+      }
+      const result = await corpsCollection.updateOne(filter,update);
+        res.send(result);
+    })
 
     app.get('/crops/:id',async(req,res)=>{
       const id = req.params.id;
