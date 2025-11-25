@@ -52,7 +52,7 @@ async function run() {
 
     app.get("/all-crops", async (req, res) => {
       const email = req.query.email;
-      console.log(email);
+      // console.log(email);
       
       let query = {};
       if(email){
@@ -66,6 +66,7 @@ async function run() {
       console.log(result);
       
     });
+   
     app.patch('/crops/:id',async(req,res)=>{
       const id = req.params.id;
       const updatedCrop = req.body;
@@ -75,7 +76,7 @@ async function run() {
           name:updatedCrop.name,
            type:updatedCrop.type,
            pricePerUnit:updatedCrop.pricePerUnit,
-           unit:updatedCrop.unit,
+           unit:updatedCrop.unit, 
            quantity:updatedCrop.quantity,
            description:updatedCrop.description,
            location:updatedCrop.location,
@@ -85,6 +86,12 @@ async function run() {
       }
       const result = await corpsCollection.updateOne(filter,update);
         res.send(result);
+    })
+
+    app.delete('/crops/:id',async (req,res)=>{
+      const id = req.params.id;
+      const query = {_id:new ObjectId(id)};
+      const result = await corpsCollection.deleteOne(query);res.send(result);
     })
 
     app.get('/crops/:id',async(req,res)=>{
