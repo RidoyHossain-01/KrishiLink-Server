@@ -27,6 +27,7 @@ async function run() {
     const db = client.db("KrishiLink-DB");
     const corpsCollection = db.collection("corps");
     const usersCollection = db.collection("users");
+    const interestsCollection = db.collection('interests')
 
     app.post('/users',async(req,res)=>{
       const user = req.body;
@@ -88,6 +89,95 @@ async function run() {
         res.send(result);
     })
 
+    //for interest 
+   app.post('/crops/:id/interests',async(req,res)=>{
+    const id = req.params.id;
+    console.log(id);
+    
+    if (!ObjectId.isValid(id)) return res.status(400).send({ error: "Invalid crop id" });
+    const { userEmail, userName, quantity, message,totalPrice } = req.body;
+    const interestId = new ObjectId();
+    const interest = {
+      _id: interestId,
+      userEmail,
+      userName,
+      quantity,
+      message,
+      totalPrice,
+      createdAt: new Date(),
+      status: 'pending'
+    }
+    // console.log(interest);
+    const updatedResult = await corpsCollection.updateOne(
+
+      {_id:new ObjectId(id)},
+      {$push:{interests:interest}}
+    );
+   
+    if (updatedResult.modifiedCount === 0) {
+      return res.status(404).send({ error: "Crop not found" });
+    }
+      const cropData = await corpsCollection.findOne({_id:new ObjectId(id)});
+   
+    
+    const interestRecord = {
+      
+      ...interest,
+      cropName: cropData.name,
+      location: cropData.location,
+      ownerName: cropData.owner.ownerName,
+      ownerEmail: cropData.owner.ownerEmail,
+      cropId: id,
+    };
+    
+    
+    const result = await interestsCollection.insertOne(interestRecord);
+    res.send({interestId:interestId, result});
+    }
+
+   )
+
+   app.patch('/corps/:cropId/interest/:interestId',async(req,res)=>{
+    try{
+      const {cropId,interestId} = req.params;
+      const { status } = req.body;
+      // validate
+       if (!["accepted", "rejected", "pending"].includes(status)) {
+      return res.status(400).send({ error: "Invalid status value" });
+    }
+
+
+    if (!ObjectId.isValid(cropId) || !ObjectId.isValid(interestId)) {
+      return res.status(400).send({ error: "Invalid id(s)" });
+    }
+
+    const cropObjectId = new ObjectId(cropId);
+    const interestObjectId = new ObjectId(interestId);
+
+      
+    // Atomically set the status of the matching interest (positional $)
+    const updateResult = await corpsCollection.updateOne(
+      { _id: cropObjectId, "interests._id": interestObjectId },
+      { $set: { "interests.$.status": status } }
+    );
+
+    const updateOnInterest = {
+      $set:{
+        status
+      }
+    }
+
+    const result = await interestsCollection.updateOne({_id:interestObjectId},updateOnInterest);
+    res.send({success:true,result,updateResult})
+
+
+    }
+    catch (err) {
+    console.error(err);
+    res.status(500).send({ error: "Server error" });
+  }
+   })
+
     app.delete('/crops/:id',async (req,res)=>{
       const id = req.params.id;
       const query = {_id:new ObjectId(id)};
@@ -106,6 +196,16 @@ async function run() {
       const result = await corpsCollection.insertOne(newCorp);
       res.send(result);
     });
+
+    app.get("/my-interests",async(req,res)=>{
+      const email = req.query.email;
+      let query = {};
+      if(email){
+        query={userEmail:email};
+      }
+      const result = await interestsCollection.find(query).toArray();
+      res.send(result);
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
