@@ -64,11 +64,11 @@ async function run() {
       if (email) {
         query = { "owner.ownerEmail": email };
       }
-      console.log(query);
+      // console.log(query);
 
       const result = await corpsCollection.find(query).toArray();
       res.send(result);
-      console.log(result);
+      // console.log(result);
     });
     app.get("/search", async (req, res) => {
       const search_text = req.query.search;
@@ -101,7 +101,7 @@ async function run() {
     //for interest
     app.post("/crops/:id/interests", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
+      // console.log(id);
 
       if (!ObjectId.isValid(id))
         return res.status(400).send({ error: "Invalid crop id" });
