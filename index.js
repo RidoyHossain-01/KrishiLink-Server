@@ -21,15 +21,21 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+  app.get('/',async(req,res)=>{
+      res.send('Server is working')
+    })
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const db = client.db("KrishiLink-DB");
     const corpsCollection = db.collection("corps");
     const usersCollection = db.collection("users");
     const interestsCollection = db.collection("interests");
+    
+
+  
 
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -47,7 +53,8 @@ async function run() {
       res.send(user);
     });
 
-    app.get("/", async (req, res) => {
+
+    app.get("/homepage", async (req, res) => {
       const result = await corpsCollection
         .find()
         .sort({ createdAt: -1 })
@@ -259,7 +266,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
@@ -273,3 +280,4 @@ run().catch(console.dir);
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+// module.exports=app
